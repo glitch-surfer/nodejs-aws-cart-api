@@ -1,7 +1,7 @@
-import { BadRequestException, Injectable } from '@nestjs/common';
+import { BadRequestException, Inject, Injectable } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
-import { UsersService } from '../users/services/users.service';
-import { User } from '../users/models';
+import { UsersService } from '../users';
+import { User } from '../users';
 // import { contentSecurityPolicy } from 'helmet';
 type TokenResponse = {
   token_type: string;
@@ -11,8 +11,8 @@ type TokenResponse = {
 @Injectable()
 export class AuthService {
   constructor(
-    private usersService: UsersService,
-    private jwtService: JwtService,
+    @Inject(UsersService) private usersService: UsersService,
+    @Inject(JwtService) private jwtService: JwtService,
   ) {}
 
   register(payload: User) {
