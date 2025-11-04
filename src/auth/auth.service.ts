@@ -1,8 +1,8 @@
-import { BadRequestException, Injectable } from '@nestjs/common';
+import { BadRequestException, Inject, Injectable } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
-import { UsersService } from '../users/services/users.service';
-import { User } from '../users/models';
-// import { contentSecurityPolicy } from 'helmet';
+import { UsersService } from '../users';
+import { User } from '../users';
+
 type TokenResponse = {
   token_type: string;
   access_token: string;
@@ -11,8 +11,8 @@ type TokenResponse = {
 @Injectable()
 export class AuthService {
   constructor(
-    private usersService: UsersService,
-    private jwtService: JwtService,
+    @Inject(UsersService) private usersService: UsersService,
+    @Inject(JwtService) private jwtService: JwtService,
   ) {}
 
   register(payload: User) {
@@ -38,13 +38,12 @@ export class AuthService {
 
   login(user: User, type: 'jwt' | 'basic' | 'default'): TokenResponse {
     const LOGIN_MAP = {
-      jwt: this.loginJWT,
-      basic: this.loginBasic,
-      default: this.loginJWT,
-    };
-    const login = LOGIN_MAP[type];
-
-    return login ? login(user) : LOGIN_MAP.default(user);
+      jwt: this.loginJWT.bind(this),
+      basic: this.loginBasic.bind(this),
+      default: this.loginJWT.bind(this),
+    } as const;
+    const login = LOGIN_MAP[type] || LOGIN_MAP.default;
+    return login(user);
   }
 
   loginJWT(user: User) {
